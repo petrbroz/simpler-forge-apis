@@ -1,17 +1,10 @@
 import { AuthClient, BucketsApi, ObjectsApi, Scope, ApiClient, PostBucketsPayload } from 'forge-apis';
 import { IAuthProvider, StaticAuthProvider, TwoLeggedAuthProvider } from './auth';
+import { DefaultHost, AuthOptions, IClientOptions, Region } from './common';
 
-type AuthOptions = { access_token: string } | { client_id: string, client_secret: string };
-
-export enum Region {
-    US = 'us',
-    EMEA = 'emea'
-}
-
-export interface IClientOptions {
-    region: Region;
-    host: string;
-}
+const DefaultPageSize = 64;
+const ReadTokenScopes: Scope[] = ['bucket:read', 'data:read'];
+const WriteTokenScopes: Scope[] = ['bucket:create', 'bucket:delete', 'data:write'];
 
 export interface IBucket {
     bucketKey: string;
@@ -49,11 +42,6 @@ export interface ISignedUrl {
     expiration: number;
     singleUse: boolean;
 }
-
-const DefaultPageSize = 64;
-const DefaultHost = 'https://developer.api.autodesk.com';
-const ReadTokenScopes: Scope[] = ['bucket:read', 'data:read'];
-const WriteTokenScopes: Scope[] = ['bucket:create', 'bucket:delete', 'data:write'];
 
 /**
  * Client providing access to Autodesk Forge OSS (object storage service) APIs.
@@ -312,6 +300,11 @@ export class OSSClient {
         const response = await this.objectsApi.createSignedResource(bucketKey, objectKey, { minutesExpiration }, { access }, null as unknown as AuthClient, credentials);
         return response.body;
     }
+
+    // TODO: no auth required here?
+    // public async deleteSignedUrl(resourceId: string): Promise<void> {
+    //     await this.objectsApi.deleteSignedResource(resourceId, this.region);
+    // }
 
     // #endregion
 }
