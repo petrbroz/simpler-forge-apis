@@ -1,0 +1,23 @@
+{
+    "name": "simpler-forge-apis",
+    "version": "0.0.1",
+    "description": "Experimental wrapper around the official Autodesk Forge SDK providing higher-level abstractions and ideally an easier-to-work-with interface.",
+    "main": "dist/index.js",
+    "scripts": {
+        "build": "yarn run build:node",
+        "build:node": "tsc",
+        "test": "mocha -u bdd",
+        "docs": "typedoc --out docs src"
+    },
+    "author": "Petr Broz <petr.broz@autodesk.com>",
+    "license": "MIT",
+    "dependencies": {
+        "forge-apis": "^0.8.6"
+    },
+    "devDependencies": {
+        "@types/forge-apis": "^0.8.2",
+        "mocha": "^9.0.3",
+        "typedoc": "^0.21.6",
+        "typescript": "^4.3.5"
+    }
+}
