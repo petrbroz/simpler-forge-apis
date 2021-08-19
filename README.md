@@ -1,7 +1,16 @@
 # simpler-forge-apis
 
+![publish to npm](https://github.com/petrbroz/simpler-forge-apis/workflows/Publish%20to%20NPM/badge.svg)
+[![npm version](https://badge.fury.io/js/simpler-forge-apis.svg)](https://badge.fury.io/js/simpler-forge-apis)
+![node](https://img.shields.io/node/v/simpler-forge-apis.svg)
+![npm downloads](https://img.shields.io/npm/dw/simpler-forge-apis.svg)
+![platforms](https://img.shields.io/badge/platform-windows%20%7C%20osx%20%7C%20linux-lightgray.svg)
+[![license](https://img.shields.io/badge/license-MIT-blue.svg)](http://opensource.org/licenses/MIT)
+
 Experimental wrapper around the official Autodesk Forge SDK providing higher-level abstractions
 and ideally an easier-to-work-with interface.
+
+Code docs: https://unpkg.com/simpler-forge-apis@latest/docs/index.html
 
 ## Benefits
 

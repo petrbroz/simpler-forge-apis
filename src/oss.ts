@@ -1,17 +1,10 @@
 import { AuthClient, BucketsApi, ObjectsApi, Scope, ApiClient, PostBucketsPayload } from 'forge-apis';
 import { IAuthProvider, StaticAuthProvider, TwoLeggedAuthProvider } from './auth';
+import { DefaultHost, AuthOptions, IClientOptions, Region } from './common';
 
-type AuthOptions = { access_token: string } | { client_id: string, client_secret: string };
-
-export enum Region {
-    US = 'us',
-    EMEA = 'emea'
-}
-
-export interface IClientOptions {
-    region: Region;
-    host: string;
-}
+const DefaultPageSize = 64;
+const ReadTokenScopes: Scope[] = ['bucket:read', 'data:read'];
+const WriteTokenScopes: Scope[] = ['bucket:create', 'bucket:delete', 'data:write'];
 
 export interface IBucket {
     bucketKey: string;
@@ -50,11 +43,10 @@ export interface ISignedUrl {
     singleUse: boolean;
 }
 
-const DefaultPageSize = 64;
-const DefaultHost = 'https://developer.api.autodesk.com';
-const ReadTokenScopes: Scope[] = ['bucket:read', 'data:read'];
-const WriteTokenScopes: Scope[] = ['bucket:create', 'bucket:delete', 'data:write'];
-
+/**
+ * Client providing access to Autodesk Forge OSS (object storage service) APIs.
+ * @link https://forge.autodesk.com/en/docs/data/v2
+ */
 export class OSSClient {
     protected authProvider: IAuthProvider;
     protected host: string;
@@ -86,6 +78,11 @@ export class OSSClient {
      * @param {number} [pageSize] Max number of buckets to receive in one batch (allowed values: 1-100).
      * @yields {AsyncIterable<IBucket[]>} Bucket batches.
      * @throws Error when the request fails, for example, due to insufficient rights, or incorrect scopes.
+     * @example
+     *     const client = new OSSClient({ client_id: process.env.FORGE_CLIENT_ID, client_secret: process.env.FORGE_CLIENT_SECRET });
+     *     for await (const page of client.enumerateBuckets()) {
+     *         console.log(page.map(bucket => bucket.bucketKey).join(','));
+     *     }
      */
     public async *enumerateBuckets(pageSize: number = DefaultPageSize): AsyncIterable<IBucket[]> {
         // TODO: validate input params
@@ -106,6 +103,10 @@ export class OSSClient {
      * @async
      * @returns {Promise<IBucket[]>} List of buckets.
      * @throws Error when the request fails, for example, due to insufficient rights, or incorrect scopes.
+     * @example
+     *     const client = new OSSClient({ client_id: process.env.FORGE_CLIENT_ID, client_secret: process.env.FORGE_CLIENT_SECRET });
+     *     const buckets = client.listBuckets();
+     *     console.log(buckets.map(bucket => bucket.bucketKey).join(','));
      */
     public async listBuckets(): Promise<IBucket[]> {
         let buckets: IBucket[] = [];
@@ -146,6 +147,18 @@ export class OSSClient {
         const payload: PostBucketsPayload = { bucketKey, policyKey, allow };
         const response = await this.bucketsApi.createBucket(payload, { xAdsRegion: this.region }, null as unknown as AuthClient, credentials);
         return response.body;
+    }
+
+    /**
+     * Deletes a bucket.
+     * @link https://forge.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-DELETE/
+     * @async
+     * @param {string} bucketKey Bucket key.
+     * @throws Error when the request fails, for example, due to insufficient rights, or incorrect scopes.
+     */
+    public async deleteBucket(bucketKey: string): Promise<void> {
+        const credentials = await this.authProvider.getToken(WriteTokenScopes);
+        await this.bucketsApi.deleteBucket(bucketKey, null as unknown as AuthClient, credentials);
     }
 
     // #endregion
@@ -210,6 +223,68 @@ export class OSSClient {
     }
 
     /**
+     * Uploads content to a specific object.
+     * @link https://forge.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-objects-:objectName-PUT
+     * @async
+     * @param {string} bucketKey Bucket key.
+     * @param {string} objectKey Object key.
+     * @param {Buffer} data Object data.
+     * @returns {Promise<IObject>} Object description.
+     * @throws Error when the request fails, for example, due to insufficient rights, or incorrect scopes.
+     */
+    public async uploadObject(bucketKey: string, objectKey: string, data: Buffer): Promise<IObject> {
+        const credentials = await this.authProvider.getToken(WriteTokenScopes);
+        const response = await this.objectsApi.uploadObject(bucketKey, objectKey, data.byteLength, data, {}, null as unknown as AuthClient, credentials);
+        return response.body;
+    }
+
+    // TODO: support for uploading streams
+
+    /**
+     * Downloads content of a specific object.
+     * @link https://forge.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-objects-:objectName-GET
+     * @async
+     * @param {string} bucketKey Bucket key.
+     * @param {string} objectKey Object key.
+     * @returns {Promise<Buffer>} Object content.
+     * @throws Error when the request fails, for example, due to insufficient rights, or incorrect scopes.
+     */
+    public async downloadObject(bucketKey: string, objectKey: string): Promise<Buffer> {
+        const credentials = await this.authProvider.getToken(ReadTokenScopes);
+        const response = await this.objectsApi.getObject(bucketKey, objectKey, {}, null as unknown as AuthClient, credentials);
+        return response.body;
+    }
+
+    /**
+     * Makes a copy of object under another name within the same bucket.
+     * @link https://forge.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-objects-:objectName-copyto-:newObjectName-PUT
+     * @async
+     * @param {string} bucketKey Bucket key.
+     * @param {string} oldObjectKey Original object key.
+     * @param {string} newObjectKey New object key.
+     * @returns {Promise<IObject>} Details of the new object copy.
+     * @throws Error when the request fails, for example, due to insufficient rights, or incorrect scopes.
+     */
+    public async copyObject(bucketKey: string, oldObjectKey: string, newObjectKey: string): Promise<IObject> {
+        const credentials = await this.authProvider.getToken(WriteTokenScopes);
+        const response = await this.objectsApi.copyTo(bucketKey, oldObjectKey, newObjectKey, null as unknown as AuthClient, credentials);
+        return response.body;
+    }
+
+    /**
+     * Deletes object.
+     * @link https://forge.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-objects-:objectName-DELETE
+     * @async
+     * @param {string} bucketKey Bucket key.
+     * @param {string} objectKey Name of object to delete.
+     * @throws Error when the request fails, for example, due to insufficient rights, or incorrect scopes.
+     */
+    public async deleteObject(bucketKey: string, objectKey: string): Promise<void> {
+        const credentials = await this.authProvider.getToken(WriteTokenScopes);
+        await this.objectsApi.deleteObject(bucketKey, objectKey, null as unknown as AuthClient, credentials);
+    }
+
+    /**
      * Creates signed URL for specific object.
      * @link https://forge.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-objects-:objectName-signed-POST
      * @async
@@ -225,6 +300,11 @@ export class OSSClient {
         const response = await this.objectsApi.createSignedResource(bucketKey, objectKey, { minutesExpiration }, { access }, null as unknown as AuthClient, credentials);
         return response.body;
     }
+
+    // TODO: no auth required here?
+    // public async deleteSignedUrl(resourceId: string): Promise<void> {
+    //     await this.objectsApi.deleteSignedResource(resourceId, this.region);
+    // }
 
     // #endregion
 }
