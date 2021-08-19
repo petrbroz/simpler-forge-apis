@@ -161,6 +161,18 @@ export class OSSClient {
         return response.body;
     }
 
+    /**
+     * Deletes a bucket.
+     * @link https://forge.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-DELETE/
+     * @async
+     * @param {string} bucketKey Bucket key.
+     * @throws Error when the request fails, for example, due to insufficient rights, or incorrect scopes.
+     */
+    public async deleteBucket(bucketKey: string): Promise<void> {
+        const credentials = await this.authProvider.getToken(WriteTokenScopes);
+        await this.bucketsApi.deleteBucket(bucketKey, null as unknown as AuthClient, credentials);
+    }
+
     // #endregion
 
     // #region Objects
@@ -220,6 +232,68 @@ export class OSSClient {
         const credentials = await this.authProvider.getToken(ReadTokenScopes);
         const response = await this.objectsApi.getObjectDetails(bucketKey, objectKey, {}, null as unknown as AuthClient, credentials);
         return response.body;
+    }
+
+    /**
+     * Uploads content to a specific object.
+     * @link https://forge.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-objects-:objectName-PUT
+     * @async
+     * @param {string} bucketKey Bucket key.
+     * @param {string} objectKey Object key.
+     * @param {Buffer} data Object data.
+     * @returns {Promise<IObject>} Object description.
+     * @throws Error when the request fails, for example, due to insufficient rights, or incorrect scopes.
+     */
+    public async uploadObject(bucketKey: string, objectKey: string, data: Buffer): Promise<IObject> {
+        const credentials = await this.authProvider.getToken(WriteTokenScopes);
+        const response = await this.objectsApi.uploadObject(bucketKey, objectKey, data.byteLength, data, {}, null as unknown as AuthClient, credentials);
+        return response.body;
+    }
+
+    // TODO: support for uploading streams
+
+    /**
+     * Downloads content of a specific object.
+     * @link https://forge.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-objects-:objectName-GET
+     * @async
+     * @param {string} bucketKey Bucket key.
+     * @param {string} objectKey Object key.
+     * @returns {Promise<Buffer>} Object content.
+     * @throws Error when the request fails, for example, due to insufficient rights, or incorrect scopes.
+     */
+    public async downloadObject(bucketKey: string, objectKey: string): Promise<Buffer> {
+        const credentials = await this.authProvider.getToken(ReadTokenScopes);
+        const response = await this.objectsApi.getObject(bucketKey, objectKey, {}, null as unknown as AuthClient, credentials);
+        return response.body;
+    }
+
+    /**
+     * Makes a copy of object under another name within the same bucket.
+     * @link https://forge.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-objects-:objectName-copyto-:newObjectName-PUT
+     * @async
+     * @param {string} bucketKey Bucket key.
+     * @param {string} oldObjectKey Original object key.
+     * @param {string} newObjectKey New object key.
+     * @returns {Promise<IObject>} Details of the new object copy.
+     * @throws Error when the request fails, for example, due to insufficient rights, or incorrect scopes.
+     */
+    public async copyObject(bucketKey: string, oldObjectKey: string, newObjectKey: string): Promise<IObject> {
+        const credentials = await this.authProvider.getToken(WriteTokenScopes);
+        const response = await this.objectsApi.copyTo(bucketKey, oldObjectKey, newObjectKey, null as unknown as AuthClient, credentials);
+        return response.body;
+    }
+
+    /**
+     * Deletes object.
+     * @link https://forge.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-objects-:objectName-DELETE
+     * @async
+     * @param {string} bucketKey Bucket key.
+     * @param {string} objectKey Name of object to delete.
+     * @throws Error when the request fails, for example, due to insufficient rights, or incorrect scopes.
+     */
+    public async deleteObject(bucketKey: string, objectKey: string): Promise<void> {
+        const credentials = await this.authProvider.getToken(WriteTokenScopes);
+        await this.objectsApi.deleteObject(bucketKey, objectKey, null as unknown as AuthClient, credentials);
     }
 
     /**
