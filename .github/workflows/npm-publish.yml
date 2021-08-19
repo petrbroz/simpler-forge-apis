@@ -24,6 +24,8 @@ jobs:
           FORGE_CLIENT_SECRET: ${{secrets.FORGE_CLIENT_SECRET}}
           TEST_BUCKET_KEY: ${{secrets.TEST_BUCKET_KEY}}
           TEST_OBJECT_KEY: ${{secrets.TEST_OBJECT_KEY}}
+          TEST_MODEL_URN: ${{secrets.TEST_MODEL_URN}}
+          TEST_VIEWABLE_GUID: ${{secrets.TEST_VIEWABLE_GUID}}
       - run: yarn run docs
 
   publish:
