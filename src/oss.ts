@@ -55,6 +55,10 @@ const DefaultHost = 'https://developer.api.autodesk.com';
 const ReadTokenScopes: Scope[] = ['bucket:read', 'data:read'];
 const WriteTokenScopes: Scope[] = ['bucket:create', 'bucket:delete', 'data:write'];
 
+/**
+ * Client providing access to Autodesk Forge OSS (object storage service) APIs.
+ * @link https://forge.autodesk.com/en/docs/data/v2
+ */
 export class OSSClient {
     protected authProvider: IAuthProvider;
     protected host: string;
@@ -86,6 +90,11 @@ export class OSSClient {
      * @param {number} [pageSize] Max number of buckets to receive in one batch (allowed values: 1-100).
      * @yields {AsyncIterable<IBucket[]>} Bucket batches.
      * @throws Error when the request fails, for example, due to insufficient rights, or incorrect scopes.
+     * @example
+     *     const client = new OSSClient({ client_id: process.env.FORGE_CLIENT_ID, client_secret: process.env.FORGE_CLIENT_SECRET });
+     *     for await (const page of client.enumerateBuckets()) {
+     *         console.log(page.map(bucket => bucket.bucketKey).join(','));
+     *     }
      */
     public async *enumerateBuckets(pageSize: number = DefaultPageSize): AsyncIterable<IBucket[]> {
         // TODO: validate input params
@@ -106,6 +115,10 @@ export class OSSClient {
      * @async
      * @returns {Promise<IBucket[]>} List of buckets.
      * @throws Error when the request fails, for example, due to insufficient rights, or incorrect scopes.
+     * @example
+     *     const client = new OSSClient({ client_id: process.env.FORGE_CLIENT_ID, client_secret: process.env.FORGE_CLIENT_SECRET });
+     *     const buckets = client.listBuckets();
+     *     console.log(buckets.map(bucket => bucket.bucketKey).join(','));
      */
     public async listBuckets(): Promise<IBucket[]> {
         let buckets: IBucket[] = [];
