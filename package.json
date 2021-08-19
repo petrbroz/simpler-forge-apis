@@ -1,6 +1,6 @@
 {
     "name": "simpler-forge-apis",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "Experimental wrapper around the official Autodesk Forge SDK providing higher-level abstractions and ideally an easier-to-work-with interface.",
     "main": "dist/index.js",
     "scripts": {
