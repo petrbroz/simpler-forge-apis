@@ -1,5 +1,21 @@
-import { Scope, AuthToken, AuthClientThreeLegged } from 'forge-apis';
+import { Scope, AuthToken, AuthClientThreeLegged, UserProfileApi, AuthClient } from 'forge-apis';
 import { DefaultHost, IAuthProvider, TwoLeggedAuthProvider } from './common';
+
+export interface IUserProfile {
+    userId: string;
+    userName: string;
+    emailId: string;
+    firstName: string;
+    lastName: string;
+    emailVerified: boolean;
+    '2FaEnabled': boolean;
+    countryCode: string;
+    language: string;
+    optin: boolean;
+    lastModified: string;
+    websiteUrl: string;
+    profileImages: { [key: string]: string };
+}
 
 /**
  * Client providing access to Autodesk Forge Authentication APIs.
@@ -10,12 +26,14 @@ export class AuthenticationClient {
     protected clientId: string;
     protected clientSecret: string;
     protected authProvider: IAuthProvider;
+    protected userProfileApi: UserProfileApi;
 
     constructor(clientId: string, clientSecret: string, host?: string) {
         this.host = host || DefaultHost;
         this.clientId = clientId;
         this.clientSecret = clientSecret;
         this.authProvider = new TwoLeggedAuthProvider(clientId, clientSecret);
+        this.userProfileApi = new UserProfileApi();
     }
 
     /**
@@ -72,5 +90,17 @@ export class AuthenticationClient {
         // Why do we need to specify scopes and redirect URI here?
         const threeLeggedClient = new AuthClientThreeLegged(this.clientId, this.clientSecret, '', [], false);
         return threeLeggedClient.refreshToken({ refresh_token: refreshToken }, scopes);
+    }
+
+    /**
+     * Gets profile information for a user based on their 3-legged auth token.
+     * @link https://forge.autodesk.com/en/docs/oauth/v2/reference/http/users-@me-GET
+     * @async
+     * @param {AuthToken} token 3-legged authentication token.
+     * @returns {Promise<IUserProfile>} User profile information.
+     */
+    public async getUserProfile(token: AuthToken): Promise<IUserProfile> {
+        const resp = await this.userProfileApi.getUserProfile(null as unknown as AuthClient, token);
+        return resp.body;
     }
 }
