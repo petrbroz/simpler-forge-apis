@@ -51,13 +51,13 @@ Which endpoints are already available in this library:
 ## Derivatives
 
 - [x] https://forge.autodesk.com/en/docs/model-derivative/v2/reference/http/formats-GET
-- [ ] https://forge.autodesk.com/en/docs/model-derivative/v2/reference/http/job-POST
+- [x] https://forge.autodesk.com/en/docs/model-derivative/v2/reference/http/job-POST
 - [ ] https://forge.autodesk.com/en/docs/model-derivative/v2/reference/http/urn-references-POST
 - [x] https://forge.autodesk.com/en/docs/model-derivative/v2/reference/http/urn-thumbnail-GET
 - [x] https://forge.autodesk.com/en/docs/model-derivative/v2/reference/http/urn-manifest-GET
 - [x] https://forge.autodesk.com/en/docs/model-derivative/v2/reference/http/urn-manifest-DELETE
 - [x] https://forge.autodesk.com/en/docs/model-derivative/v2/reference/http/urn-manifest-derivativeurn-GET
-- [ ] https://forge.autodesk.com/en/docs/model-derivative/v2/reference/http/urn-manifest-derivativeurn-HEAD
+- [x] https://forge.autodesk.com/en/docs/model-derivative/v2/reference/http/urn-manifest-derivativeurn-HEAD
 - [x] https://forge.autodesk.com/en/docs/model-derivative/v2/reference/http/urn-metadata-GET
 - [x] https://forge.autodesk.com/en/docs/model-derivative/v2/reference/http/urn-metadata-guid-GET
 - [x] https://forge.autodesk.com/en/docs/model-derivative/v2/reference/http/urn-metadata-guid-properties-GET
