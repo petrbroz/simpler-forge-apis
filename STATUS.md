@@ -21,6 +21,8 @@ Which endpoints are already available in this library:
 
 ## OSS
 
+- [ ] Streamed uploads/downloads (currently `ObjectsApi` only seems to accept `string | Buffer` as the payload)
+
 ### Buckets
 
 - [x] https://forge.autodesk.com/en/docs/data/v2/reference/http/buckets-POST
