@@ -308,10 +308,25 @@ export class ModelDerivativeClient {
      * @returns {Promise<Buffer>} Derivative content.
      * @throws Error when the request fails, for example, due to insufficient rights, or incorrect scopes.
      */
-    public async getDerivative(modelUrn: string, derivativeUrn: string): Promise<Buffer> {
+    public async getDerivativeContent(modelUrn: string, derivativeUrn: string): Promise<Buffer> {
         const credentials = await this.authProvider.getToken(ReadTokenScopes);
         const response = await this.derivativesApi.getDerivativeManifest(modelUrn, derivativeUrn, {}, null as unknown as AuthClient, credentials);
         return response.body;
+    }
+
+    /**
+     * Retrieves size (in bytes) of a specific model derivative.
+     * @link https://forge.autodesk.com/en/docs/model-derivative/v2/reference/http/urn-manifest-derivativeurn-HEAD
+     * @async
+     * @param {string} modelUrn Model URN.
+     * @param {string} derivativeUrn Derivative URN.
+     * @returns {Promise<number>} Derivative size in bytes.
+     * @throws Error when the request fails, for example, due to insufficient rights, or incorrect scopes.
+     */
+    public async getDerivativeSize(modelUrn: string, derivativeUrn: string): Promise<number> {
+        const credentials = await this.authProvider.getToken(ReadTokenScopes);
+        const response = await this.derivativesApi.getDerivativeManifestInfo(modelUrn, derivativeUrn, {}, null as unknown as AuthClient, credentials);
+        return parseInt(response.headers['Content-Length']);
     }
 
     /**
