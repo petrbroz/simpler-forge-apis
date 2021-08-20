@@ -39,8 +39,8 @@ async function _getAccessToken(scopes) {
 }
 
 const token = await _getAccessToken(['viewables:read']);
-console.log(await new DerivativesApi.getFormats({}, null, token));
-console.log(await new DerivativesApi.getManifest(URN, {}, null, token));
+console.log(await new DerivativesApi().getFormats({}, null, token));
+console.log(await new DerivativesApi().getManifest(URN, {}, null, token));
 
 // Using this library
 
