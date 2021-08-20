@@ -1,8 +1,7 @@
 // TODO: clean up the terminology in the code comments (manifest, derivative, modeldata, viewable, etc.)
 
 import { AuthClient, Scope, ApiClient, DerivativesApi } from 'forge-apis';
-import { IAuthProvider, StaticAuthProvider, TwoLeggedAuthProvider } from './auth';
-import { DefaultHost, AuthOptions, IClientOptions, Region } from './common';
+import { DefaultHost, AuthOptions, IClientOptions, Region, IAuthProvider, StaticAuthProvider, TwoLeggedAuthProvider } from './common';
 
 const ReadTokenScopes: Scope[] = ['data:read', 'viewables:read'];
 const WriteTokenScopes: Scope[] = ['data:write', 'data:read'];

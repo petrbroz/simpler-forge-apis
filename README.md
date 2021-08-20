@@ -7,30 +7,20 @@
 ![platforms](https://img.shields.io/badge/platform-windows%20%7C%20osx%20%7C%20linux-lightgray.svg)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](http://opensource.org/licenses/MIT)
 
-Experimental wrapper around the official Autodesk Forge SDK providing higher-level abstractions
-and ideally an easier-to-work-with interface.
+Experimental wrapper around the official [Autodesk Forge SDK](https://github.com/Autodesk-Forge/forge-api-nodejs-client)
+providing higher-level abstractions and (hopefully) an easier-to-work-with API.
 
-Code docs: https://unpkg.com/simpler-forge-apis@latest/docs/index.html
+- Code docs: https://unpkg.com/simpler-forge-apis@latest/docs/index.html
+- Completion status: [see STATUS.md](./STATUS.md)
 
-## Benefits
+## Motivation
 
-- Different clients generate their own access tokens as needed
-  - No need to manage them manually
-  - But if you still want to, you can - just pass in an existing access token instead of client ID/secret
-- Endpoints returning lists of results can either be enumerated or returned as one large list
-  - No need to write custom `while` loops paging through the results
-- Additional settings such as host or region can be configured (and remembered) once per client instance
-  - No need to repeat these in every API call
-- Logically grouped clients, e.g., a single class for all OSS endpoints
-  - No need to instantiate `ObjectsApi` and `BucketsApi` separately
-- Returns the data directly
-  - No need to pick the results from `response.body`
-
-Compare these two implementations of going through the OSS objects in a bucket:
-
-Using the standard APIs:
+- With the official SDK you have to maintain access tokens yourself which can be a bit of a hassle,
+and you have to pass tokens to individual API calls. This library handles all of that for you:
 
 ```js
+// Using the official SDK
+
 let _tokenCache = new Map();
 
 async function _getAccessToken(scopes) {
@@ -48,7 +38,31 @@ async function _getAccessToken(scopes) {
     };
 }
 
-const token = await _getAccessToken(INTERNAL_TOKEN_SCOPES);
+const token = await _getAccessToken(['viewables:read']);
+console.log(await new DerivativesApi.getFormats({}, null, token));
+console.log(await new DerivativesApi.getManifest(URN, {}, null, token));
+
+// Using this library
+
+const client = new ModelDerivativeClient({ client_id: FORGE_CLIENT_ID, client_secret: FORGE_CLIENT_SECRET });
+console.log(await client.getFormats());
+console.log(await client.getManifest(URN));
+
+// Or, if you already have an existing token you want to reuse
+
+const client = new ModelDerivativeClient({ access_token: ACCESS_TOKEN });
+console.log(await client.getFormats());
+console.log(await client.getManifest(URN));
+```
+
+- The official SDK typically returns complete response objects (with body, status code, etc.),
+and when working with endpoints that return _lists_ of data, it typically leaves the pagination or
+collection to you. This library takes care of that as well:
+
+```js
+// Using the official SDK
+
+const token = await _getAccessToken(['data:read']);
 let response = await new ObjectsApi().getObjects(BUCKET, { limit: 64 }, null, token);
 let objects = response.body.items;
 while (response.body.next) {
@@ -56,11 +70,49 @@ while (response.body.next) {
     response = await new ObjectsApi().getObjects(BUCKET, { limit: 64, startAt }, null, token);
     objects = objects.concat(response.body.items);
 }
+console.log(objects);
+
+// Using this library
+
+const client = new OSSClient({ client_id: FORGE_CLIENT_ID, client_secret: FORGE_CLIENT_SECRET });
+console.log(await client.listObjects(BUCKET));
+
+// Or, paging through the results using the `for await` loop
+
+for await (const batch of client.enumerateObjects(BUCKET)) {
+    console.log(batch);
+}
 ```
 
-Using the simplified APIs:
+- When working with different regions, the official SDK sometimes expects these to be provided per
+each method call, and sometimes per each class instance. And when working with custom hosts, you
+need to pass in a custom `ApiClient` object. In this library the region and host are always defined
+per class instance:
 
 ```js
-const client = new OSSClient({ client_id: FORGE_CLIENT_ID, client_secret: FORGE_CLIENT_SECRET });
-const objects = await client.listObjects(BUCKET);
+// Using the official SDK
+
+const token = await _getAccessToken(['bucket:read', 'viewables:read']);
+const apiClient = new ApiClient('https://developer-dev.api.autodesk.com');
+
+const bucketsApi = new BucketsApi(apiClient);
+let response = await bucketsApi.getBuckets({ limit: 64, region: 'EMEA' }, null, token);
+let buckets = response.body.items;
+while (response.body.next) {
+    const startAt = new URL(response.body.next).searchParams.get('startAt') as string;
+    response = await bucketsApi.getBuckets({ limit: 64, startAt, region: 'EMEA' }, null, credentials);
+    buckets = buckets.concat(response.body.items);
+}
+console.log(buckets);
+
+const derivativesApi = new DerivativesApi(apiClient, 'EMEA');
+console.log(await derivativesApi.getManifest(URN, {}, null, token));
+
+// Using this library
+
+const options = { region: Region.EMEA, host: 'https://developer-dev.api.autodesk.com' };
+const ossClient = new OSSClient({ client_id: FORGE_CLIENT_ID, client_secret: FORGE_CLIENT_SECRET }, options);
+console.log(await ossClient.listBuckets());
+const mdClient = new ModelDerivativeClient({ client_id: FORGE_CLIENT_ID, client_secret: FORGE_CLIENT_SECRET }, options);
+console.log(await mdClient.getManifest(URN));
 ```

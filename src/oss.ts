@@ -1,6 +1,5 @@
 import { AuthClient, BucketsApi, ObjectsApi, Scope, ApiClient, PostBucketsPayload } from 'forge-apis';
-import { IAuthProvider, StaticAuthProvider, TwoLeggedAuthProvider } from './auth';
-import { DefaultHost, AuthOptions, IClientOptions, Region } from './common';
+import { DefaultHost, AuthOptions, IClientOptions, Region, IAuthProvider, StaticAuthProvider, TwoLeggedAuthProvider } from './common';
 
 const DefaultPageSize = 64;
 const ReadTokenScopes: Scope[] = ['bucket:read', 'data:read'];
