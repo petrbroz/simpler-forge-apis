@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Initial support for browsing DM hubs and projects
+
 ## [0.0.5] - 2021-08-20
 
 ### Added
