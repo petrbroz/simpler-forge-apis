@@ -1,10 +1,10 @@
 // TODO: clean up the terminology in the code comments (manifest, derivative, modeldata, viewable, etc.)
 
-import { AuthClient, Scope, ApiClient, DerivativesApi } from 'forge-apis';
+import { AuthClient, Scope, ApiClient, DerivativesApi, JobPayload, JobPayloadItem } from 'forge-apis';
 import { DefaultHost, AuthOptions, IClientOptions, Region, IAuthProvider, StaticAuthProvider, TwoLeggedAuthProvider } from './common';
 
 const ReadTokenScopes: Scope[] = ['data:read', 'viewables:read'];
-const WriteTokenScopes: Scope[] = ['data:write', 'data:read'];
+const WriteTokenScopes: Scope[] = ['data:write', 'data:read', 'data:create'];
 
 export interface IDerivativeFormats {
     [outputFormat: string]: string[];
@@ -82,6 +82,109 @@ export enum ThumbnailSize {
     Small = 100,
     Medium = 200,
     Large = 400
+}
+
+export type IDerivativeOutputFormat = IDerivativeOutputFormatSVF
+    | IDerivativeOutputFormatSVF2
+    | IDerivativeOutputFormatSTL
+    | IDerivativeOutputFormatSTEP
+    | IDerivativeOutputFormatIGES
+    | IDerivativeOutputFormatOBJ
+    | IDerivativeOutputFormatDWG
+    | IDerivativeOutputFormatIFC;
+
+export interface IDerivativeOutputFormatSVF {
+    type: 'svf',
+    views: string[];
+    advanced?: {
+        switchLoader?: boolean;
+        conversionMethod?: string;
+        buildingStoreys?: string;
+        spaces?: string;
+        openingElements?: string;
+        generateMasterViews?: boolean;
+        materialMode?: string;
+        hiddenObjects?: boolean;
+        basicMaterialProperties?: boolean;
+        autodeskMaterialProperties?: boolean;
+        timelinerProperties?: boolean;
+    };
+}
+
+export interface IDerivativeOutputFormatSVF2 {
+    type: 'svf2',
+    views: string[];
+    advanced?: {
+        switchLoader?: boolean;
+        conversionMethod?: string;
+        buildingStoreys?: string;
+        spaces?: string;
+        openingElements?: string;
+        generateMasterViews?: boolean;
+        materialMode?: string;
+        hiddenObjects?: boolean;
+        basicMaterialProperties?: boolean;
+        autodeskMaterialProperties?: boolean;
+        timelinerProperties?: boolean;
+    };
+}
+
+export interface IDerivativeOutputFormatSTL {
+    type: 'stl',
+    advanced?: {
+        format?: string;
+        exportColor?: boolean;
+        exportFileStructure?: string;
+    };
+}
+
+export interface IDerivativeOutputFormatSTEP {
+    type: 'step',
+    advanced?: {
+        applicationProtocol?: string;
+        tolerance?: number;
+    };
+}
+
+export interface IDerivativeOutputFormatIGES {
+    type: 'iges',
+    advanced?: {
+        tolerance?: number;
+        surfaceType?: string;
+        sheetType?: string;
+        solidType?: string;
+    };
+}
+
+export interface IDerivativeOutputFormatOBJ {
+    type: 'obj',
+    advanced?: {
+        exportFileStructure?: string;
+        unit?: string;
+        modelGuid?: string;
+        objectIds?: number[];
+    };
+}
+
+export interface IDerivativeOutputFormatDWG {
+    type: 'dwg',
+    advanced?: {
+        exportSettingName?: string;
+    };
+}
+
+export interface IDerivativeOutputFormatIFC {
+    type: 'ifc',
+    advanced?: {
+        exportSettingName?: string;
+    };
+}
+
+export interface IJob {
+    result: string;
+    urn: string;
+    //acceptedJobs?: any;
+    //output?: any;
 }
 
 /**
@@ -223,6 +326,43 @@ export class ModelDerivativeClient {
     public async getThumbnail(urn: string, size: ThumbnailSize = ThumbnailSize.Medium): Promise<Buffer> {
         const credentials = await this.authProvider.getToken(ReadTokenScopes);
         const response = await this.derivativesApi.getThumbnail(urn, { width: size }, null as unknown as AuthClient, credentials);
+        return response.body;
+    }
+
+    /**
+     * Submits a translation job.
+     * @link https://forge.autodesk.com/en/docs/model-derivative/v2/reference/http/job-POST.
+     * @async
+     * @param {string} urn Document to be translated.
+     * @param {IDerivativeOutputFormat[]} outputs List of requested output formats.
+     * @param {string} [rootFilename] Optional relative path to root design if the translated file is an archive.
+     * @param {boolean} [force] Force translation even if a derivative already exists.
+     * @param {string} [workflowId] Optional workflow ID to be used with Forge Webhooks.
+     * @param {object} [workflowAttr] Optional workflow attributes to be used with Forge Webhooks.
+     * @returns {Promise<IJob>} Translation job details.
+     * @throws Error when the request fails, for example, due to insufficient rights.
+     */
+    public async submitJob(urn: string, outputs: IDerivativeOutputFormat[], rootFilename?: string, force?: boolean, workflowId?: string, workflowAttr?: object): Promise<IJob> {
+        const credentials = await this.authProvider.getToken(WriteTokenScopes);
+        const payload: JobPayload = {
+            input: {
+                urn
+            },
+            output: {
+                formats: outputs as JobPayloadItem[]
+            }
+        };
+        if (rootFilename) {
+            payload.input.compressedUrn = true;
+            payload.input.rootFilename = rootFilename;
+        }
+        if (workflowId) {
+            payload.misc = {
+                workflow: workflowId,
+                workflowAttributes: workflowAttr
+            };
+        }
+        const response = await new DerivativesApi().translate(payload, { xAdsForce: force }, null as unknown as AuthClient, credentials);
         return response.body;
     }
 }
