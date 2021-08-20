@@ -201,8 +201,10 @@ export class ModelDerivativeClient {
     constructor(protected auth: AuthOptions, options?: IClientOptions) {
         if ('access_token' in auth) {
             this.authProvider = new StaticAuthProvider(auth.access_token);
-        } else {
+        } else if ('client_id' in auth && 'client_secret' in auth) {
             this.authProvider = new TwoLeggedAuthProvider(auth.client_id, auth.client_secret);
+        } else {
+            this.authProvider = auth;
         }
         this.host = options?.host || DefaultHost;
         this.region = options?.region || Region.US;

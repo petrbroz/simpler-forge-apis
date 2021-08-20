@@ -12,7 +12,8 @@
     "author": "Petr Broz <petr.broz@autodesk.com>",
     "license": "MIT",
     "dependencies": {
-        "forge-apis": "^0.8.6"
+        "forge-apis": "^0.8.6",
+        "jwt-decode": "^3.1.2"
     },
     "devDependencies": {
         "@types/forge-apis": "^0.8.2",

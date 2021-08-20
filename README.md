@@ -10,8 +10,8 @@
 Experimental wrapper around the official [Autodesk Forge SDK](https://github.com/Autodesk-Forge/forge-api-nodejs-client)
 providing higher-level abstractions and (hopefully) an easier-to-work-with API.
 
-- Code docs: https://unpkg.com/simpler-forge-apis@latest/docs/index.html
-- Completion status: [see STATUS.md](./STATUS.md)
+- Documentation: https://unpkg.com/simpler-forge-apis@latest/docs/index.html
+- Completeness: [see STATUS.md](./STATUS.md)
 
 ## Motivation
 
@@ -115,4 +115,52 @@ const ossClient = new OSSClient({ client_id: FORGE_CLIENT_ID, client_secret: FOR
 console.log(await ossClient.listBuckets());
 const mdClient = new ModelDerivativeClient({ client_id: FORGE_CLIENT_ID, client_secret: FORGE_CLIENT_SECRET }, options);
 console.log(await mdClient.getManifest(URN));
+```
+
+## Usage
+
+1. Install the library to your project:
+
+```bash
+# using npm
+npm install simpler-forge-apis
+
+# using yarn
+yarn add simpler-forge-apis
+```
+
+2. Import the classes you'll be working with, for example:
+
+```js
+// in JavaScript
+const { DataManagementClient, ModelDerivativeClient, TwoLeggedAuthProvider } = require('simpler-forge-apis');
+
+// in TypeScript
+import { DataManagementClient, ModelDerivativeClient, TwoLeggedAuthProvider } from 'simpler-forge-apis';
+```
+
+3. Instantiate the clients with specific auth options:
+
+```js
+// by passing in an existing access token
+let dataManagementClient = new DataManagementClient({ access_token: FORGE_ACCESS_TOKEN });
+
+// by passing in your application's client ID and secret (so each instance will generate its own tokens)
+let dataManagementClient = new DataManagementClient({ client_id: FORGE_CLIENT_ID, client_secret: FORGE_CLIENT_SECRET });
+
+// by passing in a shared 2-legged OAuth provider
+let twoLeggedAuthProvider = new TwoLeggedAuthProvider(FORGE_CLIENT_ID, FORGE_CLIENT_SECRET);
+let dataManagementClient = new DataManagementClient(twoLeggedAuthProvider);
+let modelDerivativeClient = new ModelDerivativeClient(twoLeggedAuthProvider);
+
+// by passing in a custom auth provider
+const customAuthProvider = {
+    async getToken(scopes) {
+        // Get the token for the given set of scopes from somewhere, for example, from a database.
+        // The returned object should contain 3 properties: `access_token` (the actual token string),
+        // `token_type` (always "Bearer"), and `expires_in` (expiration time in seconds).
+        return { access_token: '...', token_type: 'Bearer', expires_in: 3599 };
+    }
+};
+let dataManagementClient = new DataManagementClient(customAuthProvider);
 ```
