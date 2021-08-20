@@ -10,7 +10,8 @@
 Experimental wrapper around the official [Autodesk Forge SDK](https://github.com/Autodesk-Forge/forge-api-nodejs-client)
 providing higher-level abstractions and (hopefully) an easier-to-work-with API.
 
-Code docs: https://unpkg.com/simpler-forge-apis@latest/docs/index.html
+- Code docs: https://unpkg.com/simpler-forge-apis@latest/docs/index.html
+- Completion status: [see STATUS.md](./STATUS.md)
 
 ## Motivation
 
