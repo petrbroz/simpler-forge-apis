@@ -3,7 +3,14 @@ import { DefaultHost, AuthOptions, IClientOptions, Region, IAuthProvider, Static
 
 const ReadTokenScopes: Scope[] = ['data:read'];
 
-export interface IHub {
+interface IJsonApiObject {
+    type: string;
+    attributes: any;
+    links: any;
+    relationships: any;
+}
+
+export interface IHub extends IJsonApiObject {
     type: 'hubs';
     id: string;
     attributes: {
@@ -13,7 +20,7 @@ export interface IHub {
     };
 }
 
-export interface IProject {
+export interface IProject extends IJsonApiObject {
     type: 'projects';
     id: string;
     attributes: {
@@ -23,7 +30,7 @@ export interface IProject {
     };
 }
 
-export interface IFolder {
+export interface IFolder extends IJsonApiObject {
     type: 'folders';
     id: string;
     attributes: {
@@ -41,7 +48,7 @@ export interface IFolder {
     };
 }
 
-export interface IItem {
+export interface IItem extends IJsonApiObject {
     type: 'items';
     id: string;
     attributes: {
@@ -66,7 +73,7 @@ export interface IItem {
     };
 }
 
-interface IVersion {
+interface IVersion extends IJsonApiObject {
     id: string;
     type: string;
     attributes: {
