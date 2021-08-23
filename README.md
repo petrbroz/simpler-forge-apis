@@ -21,24 +21,16 @@ and you have to pass tokens to individual API calls. This library handles all of
 ```js
 // Using the official SDK
 
-let _tokenCache = new Map();
+let internalAuthClient = new AuthClientTwoLegged(FORGE_CLIENT_ID, FORGE_CLIENT_SECRET, INTERNAL_TOKEN_SCOPES, true);
 
-async function _getAccessToken(scopes) {
-    const key = scopes.join(',');
-    let token = _tokenCache.get(key);
-    if (!token || token.expires_at < Date.now()) {
-        const client = new AuthClientTwoLegged(FORGE_CLIENT_ID, FORGE_CLIENT_SECRET, scopes);
-        token = await client.authenticate();
-        token.expires_at = Date.now() + token.expires_in * 1000;
-        _tokenCache.set(key, token);
+async function getInternalToken() {
+    if (!internalAuthClient.isAuthorized()) {
+        await internalAuthClient.authenticate();
     }
-    return {
-        access_token: token.access_token,
-        expires_in: Math.round((token.expires_at - Date.now()) / 1000)
-    };
+    return internalAuthClient.getCredentials();
 }
 
-const token = await _getAccessToken(['viewables:read']);
+const token = await getInternalToken();
 console.log(await new DerivativesApi().getFormats({}, null, token));
 console.log(await new DerivativesApi().getManifest(URN, {}, null, token));
 
@@ -62,7 +54,7 @@ collection to you. This library takes care of that as well:
 ```js
 // Using the official SDK
 
-const token = await _getAccessToken(['data:read']);
+const token = await getInternalToken();
 let response = await new ObjectsApi().getObjects(BUCKET, { limit: 64 }, null, token);
 let objects = response.body.items;
 while (response.body.next) {
@@ -92,7 +84,7 @@ per class instance:
 ```js
 // Using the official SDK
 
-const token = await _getAccessToken(['bucket:read', 'viewables:read']);
+const token = await getInternalToken();
 const apiClient = new ApiClient('https://developer-dev.api.autodesk.com');
 
 const bucketsApi = new BucketsApi(apiClient);
